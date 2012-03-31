@@ -13,6 +13,9 @@ import subprocess
 import sys
 import tempfile
 
+IGNORE_FILES = [
+    r'\/migrations\/',  # South
+]
 
 def system(*args, **kwargs):
     kwargs.setdefault('stdout', subprocess.PIPE)
@@ -20,17 +23,26 @@ def system(*args, **kwargs):
     out, err = proc.communicate()
     return out
 
-def main(DEBUG=False):
+def main(DEBUG=False, ignore_files=[]):
     CURRENT_DIR = os.path.dirname(__file__)
-    # Проверяем тольrо staged файлы
+    # Проверяем только staged файлы
     modified = re.compile('[AM]+\s+(?P<name>.*\.py)$', re.MULTILINE)  # see also MM, UU
-    files = system('git', 'status', '--porcelain')
-    files = modified.findall(files)
+    modified_files = system('git', 'status', '--porcelain')
+    modified_files = modified.findall(modified_files)
+
+    files = set()
+    for ignore in ignore_files:
+        for file_ in modified_files:
+            if not ignore.search(file_):
+                files.add(file_)
+    files = list(files)
+
     handlers = {
         'pep8': {'args': ['--ignore=E501']},
         'pyflakes': {},
     }
     error = False
+
     for handler in handlers:
         # Для файлов делаем временную директорию,
         # в этой песочнице они и будут проверяться
@@ -43,9 +55,9 @@ def main(DEBUG=False):
             with file(filename, 'w') as f:
                 if DEBUG:
                     # Так как git show отдает только staged содержимое,
-                    #   а нам надо текущее состояние файла:
-                    # XXX: Refactor me!
-                    out = open(os.path.join(CURRENT_DIR, "..", "..", "..", name), 'r').read()
+                    #   а нам надо текущее состояние файла, то выходим
+                    #   из .git/hooks и получаем полный путь до файла
+                    out = open(os.path.join(CURRENT_DIR, "..", "..", name), 'r').read()
                 else:
                     out = system('git', 'show', ':' + name)
                 if handler == "pep8":
@@ -71,9 +83,7 @@ def main(DEBUG=False):
         shutil.rmtree(tempdir)
 
     if error is True:
-        print "*" * 33
-        print "*****", "CODE REVIEW IS FAILED", "*****"
-        print "*" * 33
+        print "*" * 33, "\n{:*^33}\n".format(" CODE REVIEW IS FAILED "), "*" * 33
         print "Check files:", files
         for handler in handlers:
             try:
@@ -86,8 +96,9 @@ def main(DEBUG=False):
         sys.exit(1)
 
 if __name__ == '__main__':
+    IGNORE_FILES_REGEXP = [re.compile(regexp) for regexp in IGNORE_FILES]
     try:
         DEBUG = sys.argv[1] == "--debug"
     except IndexError:
         DEBUG = False
-    main(DEBUG)
+    main(DEBUG, ignore_files=IGNORE_FILES_REGEXP)
