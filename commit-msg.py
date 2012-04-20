@@ -26,7 +26,7 @@ ISSUE_ID_FORMAT_HELP_KWARGS = {'project_id': ISSUE_PREFIX, 'issue_number': 1027}
 
 
 def check_task_tracking_identificator(message):
-    id_re = re.compile('\[\#?' + ISSUE_PREFIX + '-\d+\]', re.MULTILINE)
+    id_re = re.compile('\[\#?[A-Z]{3,5}-\d+\]', re.MULTILINE)
     if not id_re.search(message):
         return "Wrong Issue ID! Use format: {frmt}, example: {example}".format(
             frmt=ISSUE_ID_FORMAT, example=ISSUE_ID_FORMAT.format(**ISSUE_ID_FORMAT_HELP_KWARGS)), False
