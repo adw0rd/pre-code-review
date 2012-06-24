@@ -15,6 +15,7 @@ import tempfile
 
 IGNORE_FILES = [
     r'\/migrations\/',  # South
+    # r'\/sphinxapi\.py',  # Sphinx
 ]
 
 HANDLERS = {
@@ -38,10 +39,9 @@ def main(DEBUG=False, ignore_files=[]):
     modified_files = system('git', 'status', '--porcelain')
     modified_files = modified.findall(modified_files)
     files = set()
-    for ignore in ignore_files:
-        for file_ in modified_files:
-            if not ignore.search(file_):
-                files.add(file_)
+    for file_ in modified_files:
+        if not any([ignore.search(file_) for ignore in ignore_files]):
+            files.add(file_)
     files = list(files)
 
     error = False
