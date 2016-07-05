@@ -56,7 +56,7 @@ def main(DEBUG=False, ignore_files=[]):
             filepath = os.path.dirname(filename)
             if not os.path.exists(filepath):
                 os.makedirs(filepath)
-            with file(filename, 'w') as f:
+            with open(filename, 'w') as f:
                 if DEBUG:
                     # Because `git-show` gives only `staged` content,
                     #   and we want to receive the current content of the file, then
@@ -70,7 +70,10 @@ def main(DEBUG=False, ignore_files=[]):
                     #   to correctly processed E501 (line too long).
                     # And for pyflakes not worth the hassle, as it complains
                     #   about an invalid utf-8.
-                    out = str(out.decode('utf-8').encode('ascii', 'replace'))
+                    if six.PY3:
+                        out = out.encode('ascii', 'replace').decode()
+                    else:
+                        out = str(out.decode('utf-8').encode('ascii', 'replace'))
                 f.write(out)
         try:
             if 'args' in HANDLERS[handler]:
@@ -78,6 +81,8 @@ def main(DEBUG=False, ignore_files=[]):
             else:
                 args = []
             HANDLERS[handler]['result'] = system(handler, cwd=tempdir, *args + ['.'])
+            if six.PY3:
+                HANDLERS[handler]['result'] = HANDLERS[handler]['result'].decode()
             if HANDLERS[handler]['result']:
                 error = True
         except:
