@@ -8,6 +8,7 @@ Pre Code Review
 from __future__ import with_statement
 import os
 import re
+import six
 import shutil
 import subprocess
 import sys
@@ -37,6 +38,8 @@ def main(DEBUG=False, ignore_files=[]):
     # Check files only staged
     modified = re.compile('[AM]+\s+(?P<name>.*\.py)$', re.MULTILINE)  # see also MM, UU
     modified_files = system('git', 'status', '--porcelain')
+    if six.PY3:
+        modified_files = modified_files.decode()
     modified_files = modified.findall(modified_files)
     files = set()
     for file_ in modified_files:
@@ -85,13 +88,13 @@ def main(DEBUG=False, ignore_files=[]):
         shutil.rmtree(tempdir)
 
     if error is True:
-        print "*" * 33, "\n{:*^33}\n".format(" CODE REVIEW IS FAILED "), "*" * 33
-        print "Check files:", ", ".join(files)
+        print ("*" * 33, "\n{:*^33}\n".format(" CODE REVIEW IS FAILED "), "*" * 33)
+        print ("Check files:", ", ".join(files))
         for handler in HANDLERS:
             try:
                 if HANDLERS[handler]['result']:
-                    print handler + ":"
-                    print HANDLERS[handler]['result']
+                    print (handler + ":")
+                    print (HANDLERS[handler]['result'])
             except KeyError:
                 pass
         # If errors exist, then stop the commit

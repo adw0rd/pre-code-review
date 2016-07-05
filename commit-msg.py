@@ -43,10 +43,10 @@ def main(message):
             if status is False:
                 error = True
     if error is True:
-        print "*" * 34, "\n{:*^34}\n".format(" CHECK COMMIT IS FAILED "), "*" * 34
+        print ("*" * 34, "\n{:*^34}\n".format(" CHECK COMMIT IS FAILED "), "*" * 34)
         for handler_name in HANDLERS:
-            print "> {}:".format(handler_name)
-            print ">>", HANDLERS[handler_name]['result']
+            print ("> {}:".format(handler_name))
+            print (">>", HANDLERS[handler_name]['result'])
         sys.exit(1)
 
 if __name__ == "__main__":
