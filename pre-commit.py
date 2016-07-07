@@ -71,7 +71,7 @@ def main(DEBUG=False, ignore_files=[]):
                     # And for pyflakes not worth the hassle, as it complains
                     #   about an invalid utf-8.
                     if six.PY3:
-                        out = out.encode('ascii', 'replace').decode()
+                        out = out.decode().encode('ascii', 'replace')
                     else:
                         out = str(out.decode('utf-8').encode('ascii', 'replace'))
                 f.write(out)
