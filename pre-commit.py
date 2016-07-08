@@ -71,7 +71,9 @@ def main(DEBUG=False, ignore_files=[]):
                     # And for pyflakes not worth the hassle, as it complains
                     #   about an invalid utf-8.
                     if six.PY3:
-                        out = out.decode().encode('ascii', 'replace')
+                        if isinstance(out, bytes):
+                            out = out.decode()
+                        out = out.encode('ascii', 'replace').decode()
                     else:
                         out = str(out.decode('utf-8').encode('ascii', 'replace'))
                 f.write(out)
@@ -93,7 +95,9 @@ def main(DEBUG=False, ignore_files=[]):
         shutil.rmtree(tempdir)
 
     if error is True:
-        print ("*" * 33, "\n{:*^33}\n".format(" CODE REVIEW IS FAILED "), "*" * 33)
+        print ("*" * 33)
+        print ("{:*^33}".format(" CODE REVIEW IS FAILED "))
+        print ("*" * 33)
         print ("Check files:", ", ".join(files))
         for handler in HANDLERS:
             try:
