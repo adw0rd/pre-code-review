@@ -65,14 +65,14 @@ def main(DEBUG=False, ignore_files=[]):
                     out = open(os.path.join(CURRENT_DIR, "..", "..", name), 'r').read()
                 else:
                     out = system('git', 'show', ':' + name)
+                if six.PY3 and isinstance(out, bytes):
+                    out = out.decode()
                 if handler == "pep8":
                     # For the `pep8` we need convert content to ASCII charset,
                     #   to correctly processed E501 (line too long).
                     # And for pyflakes not worth the hassle, as it complains
                     #   about an invalid utf-8.
                     if six.PY3:
-                        if isinstance(out, bytes):
-                            out = out.decode()
                         out = out.encode('ascii', 'replace').decode()
                     else:
                         out = str(out.decode('utf-8').encode('ascii', 'replace'))
