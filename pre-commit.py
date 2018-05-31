@@ -8,11 +8,15 @@ Pre Code Review
 from __future__ import with_statement
 import os
 import re
-import six
 import shutil
 import subprocess
 import sys
 import tempfile
+
+try:
+    from six import PY3
+except ImportError:
+    PY3 = True
 
 IGNORE_FILES = [
     r'\/migrations\/',  # South
@@ -20,7 +24,7 @@ IGNORE_FILES = [
 ]
 
 HANDLERS = {
-    'pep8': {'args': ['--ignore=E501']},
+    'pycodestyle': {'args': ['--ignore=E501']},
     'pyflakes': {},
 }
 
@@ -38,7 +42,7 @@ def main(DEBUG=False, ignore_files=[]):
     # Check files only staged
     modified = re.compile('[AM]+\s+(?P<name>.*\.py)$', re.MULTILINE)  # see also MM, UU
     modified_files = system('git', 'status', '--porcelain')
-    if six.PY3:
+    if PY3:
         modified_files = modified_files.decode()
     modified_files = modified.findall(modified_files)
     files = set()
@@ -65,14 +69,14 @@ def main(DEBUG=False, ignore_files=[]):
                     out = open(os.path.join(CURRENT_DIR, "..", "..", name), 'r').read()
                 else:
                     out = system('git', 'show', ':' + name)
-                if six.PY3 and isinstance(out, bytes):
+                if PY3 and isinstance(out, bytes):
                     out = out.decode()
                 if handler == "pep8":
                     # For the `pep8` we need convert content to ASCII charset,
                     #   to correctly processed E501 (line too long).
                     # And for pyflakes not worth the hassle, as it complains
                     #   about an invalid utf-8.
-                    if six.PY3:
+                    if PY3:
                         out = out.encode('ascii', 'replace').decode()
                     else:
                         out = str(out.decode('utf-8').encode('ascii', 'replace'))
@@ -83,7 +87,7 @@ def main(DEBUG=False, ignore_files=[]):
             else:
                 args = []
             HANDLERS[handler]['result'] = system(handler, cwd=tempdir, *args + ['.'])
-            if six.PY3:
+            if PY3:
                 HANDLERS[handler]['result'] = HANDLERS[handler]['result'].decode()
             if HANDLERS[handler]['result']:
                 error = True
